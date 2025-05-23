@@ -1,0 +1,118 @@
+//
+//  Dialog.swift
+//  GUI Input Experiment
+//
+//  Proof of concept for using NSWindow and SwiftUI components
+//  to get user input through a graphical prompt and then use it
+//  in the Alfred app - or on the command line.
+//
+//  Created by Patrick Sy on 30/04/2023.
+//  Adapted by Fred Appelman on 16/05/2025.
+//
+
+import SwiftUI
+
+struct Dialog: View {
+  {declaration}
+
+  var body: some View {
+      VStack {
+        {title}
+        {rows}
+        Buttons()
+      }
+      .padding()
+      .frame(width: 460)
+  }
+    
+    @ViewBuilder
+    func Title(icon: String = "aqi.medium", text: String) -> some View {
+        HStack {
+            Image(systemName: icon)
+                .font(Font.largeTitle)
+                .foregroundColor(.blue)
+                .padding(.trailing, 10)
+            Text(text).font(.title2)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+    
+    @ViewBuilder
+    func Buttons() -> some View {
+        HStack {
+            Button(role: .cancel) {
+                print("canceled", terminator: "")
+                NSApplication.shared.terminate(nil)
+            } label: {
+                Text("Cancel")
+            }
+            .keyboardShortcut(.cancelAction)
+            // ===---------------------------------------------------------------=== //
+            // MARK: - Define here what should be returned
+            // ===---------------------------------------------------------------=== //
+            Button {
+                {result}
+                NSApplication.shared.terminate(nil)
+            } label: {
+                Text("Proceed")
+            }
+            .keyboardShortcut(.defaultAction)
+        }
+        .frame(maxWidth: .infinity, alignment: .trailing)
+        .padding(.top, 10)
+    }
+    init() {
+        for index in 1..<CommandLine.arguments.count {
+            print(CommandLine.arguments[index])
+        }
+    }
+}
+
+struct Row: View {
+    let text: String
+    @Binding var input: String
+    
+    var body: some View {
+        HStack {
+            Text(text)
+            TextField(text, text: $input)
+                .frame(maxWidth: 300)
+        }
+        .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+}
+
+{types}
+
+{selectors}
+
+class DialogAppDelegate: NSObject, NSApplicationDelegate {
+    var window: NSWindow!
+    func applicationDidFinishLaunching(_ aNotification: Notification) {
+        let dialogView = Dialog()
+        window = NSWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 350),
+            styleMask: [.titled, .miniaturizable, .resizable, .fullSizeContentView],
+            backing: .buffered,
+            defer: false
+        )
+        window.center()
+        window.setFrameAutosaveName("Main Window")
+        window.contentView = NSHostingView(rootView: dialogView)
+        window.makeKeyAndOrderFront(nil)
+        NSApplication.shared.activate(ignoringOtherApps: true)
+    }
+}
+
+
+let app = NSApplication.shared
+let delegate = DialogAppDelegate()
+app.delegate = delegate
+app.setActivationPolicy(.regular) // so we can bring the window back when it goes to the background
+for index in 1..<CommandLine.arguments.count {
+    print(CommandLine.arguments[index])
+}
+app.run()
+
+
+

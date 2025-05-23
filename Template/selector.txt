@@ -1,0 +1,15 @@
+struct Selector{enumeration}: View {
+    let info: String
+    @Binding var option: {enumeration}
+    var body: some View {
+        HStack {
+            Text(info)
+            Picker("", selection: $option, content: {
+            {picker}
+            })
+            .frame(width: 310)
+        }
+        .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+}
+

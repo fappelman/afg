@@ -1,0 +1,9 @@
+./target/debug/afg \
+	--title "The example title" \
+	--field type=String@name=title@default=example@decoration="The Title" \
+	--field type=String@name=subtitle@default=@decoration="The Subtitle" \
+	--field type=Bool@name=enabled@default=true@decoration="Enable secret" \
+	--field type=Picker@name=choice@default=0@decoration="Make your choice"@choices="Choice A,Choice B,Choice C" \
+	--field type=Picker@name=choice2@default=2@decoration="Make another choice"@choices="Choice A,Choice B,Choice C" \
+	output.swift && \
+swift output.swift
