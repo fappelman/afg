@@ -13,6 +13,11 @@
 import SwiftUI
 
 struct Dialog: View {
+  enum FocusField: Hashable {
+	case field
+  }
+  @FocusState private var focusedField: FocusField?
+
   {declaration}
 
   var body: some View {
@@ -22,7 +27,7 @@ struct Dialog: View {
         Buttons()
       }
       .padding()
-      .frame(width: 460)
+      .frame(width: window_width)
   }
     
     @ViewBuilder
@@ -37,6 +42,10 @@ struct Dialog: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
     
+    func flatten(_ set: Set<String>) -> String {
+        return set.joined(separator: ",")
+    }
+
     @ViewBuilder
     func Buttons() -> some View {
         HStack {
@@ -68,13 +77,78 @@ struct Dialog: View {
     }
 }
 
-struct Row: View {
+struct ToggleView: View {
+    @Binding var isOn: Bool
+    var label: String
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.headline)
+                .padding(.trailing, 10)
+            HStack {
+                Toggle("", isOn: $isOn)
+                    .toggleStyle(SwitchToggleStyle())
+                Spacer()
+            }
+            .frame(width: 310)
+        }
+        .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+}
+
+struct RadioSelection: View {
+    @State var label: String
+    @State var options: [String]
+    @Binding var selection: Set<String>
+
+    func toggleSelection(for option: String) {
+        if selection.contains(option) {
+            if let index = selection.firstIndex(of: option) {
+                selection.remove(at: index)
+            }
+        } else {
+            selection.insert(option)
+        }
+    }
+
+
+    var body: some View {
+        HStack {
+            Text(label)
+                .font(.headline)
+                .padding(.trailing, 10)
+            HStack(spacing: 5) {
+                Spacer()
+                ForEach(options, id: \.self) { option in
+                    Button(action: {
+                        toggleSelection(for: option)
+                    }) {
+                        HStack {
+                            Image(systemName: selection.contains(option) ? "largecircle.fill.circle" : "circle")
+                            Text(option)
+                        }
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    //.padding()
+                    .cornerRadius(8)
+                }
+            }
+            .frame(maxWidth: 310)
+        }
+        .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+}
+
+struct StringView: View {
     let text: String
     @Binding var input: String
     
     var body: some View {
         HStack {
             Text(text)
+                .font(.headline)
+                .padding(.trailing, 10)
             TextField(text, text: $input)
                 .frame(maxWidth: 300)
         }
@@ -82,9 +156,27 @@ struct Row: View {
     }
 }
 
-{types}
+struct PickerView: View {
+    let title: String
+    @Binding var selectedOption: String
+    let options: [String]
 
-{selectors}
+    var body: some View {
+        HStack {
+            Text(title)
+                .font(.headline)
+                .padding(.trailing, 10)
+            Picker("", selection: $selectedOption) {
+                ForEach(options, id: \.self) { option in
+                    Text(option).tag(option)
+                }
+            }
+            .frame(width: 310)
+            .pickerStyle(MenuPickerStyle())
+        }
+        .frame(maxWidth: .infinity, alignment: .trailing)
+    }
+}
 
 class DialogAppDelegate: NSObject, NSApplicationDelegate {
     var window: NSWindow!

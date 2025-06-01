@@ -1,15 +1,15 @@
-use std::fs;
-use std::process::exit;
 use serde::{Deserialize, Serialize};
 use std::str;
+use crate::traits::{Declaration, Instantiate, Result};
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct Variable {
-    pub name: String,
-    pub var_type: String,
-    pub default: String,
-    pub description: String,
-    pub choices: Option<Vec<String>>,
+pub enum Variable {
+    InputString(crate::input_string::InputString),
+    InputBoolean(crate::input_boolean::InputBoolean),
+    Picker(crate::picker::Picker),
+    RadioButton(crate::radio_button::RadioButton),
 }
+
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
     pub title: String,
@@ -17,66 +17,59 @@ pub struct Config {
 }
 
 impl Config {
-    pub fn declaration(self) -> String {
+    /// Output the variable declarations at the top of the main view
+    /// Return a string that can be injected into the template
+    /// at the position '{declaration}'
+    pub fn variable_declaration(self, window_width: u32, row_height: u32) -> String {
         let mut result = String::new();
         for variable in self.variables {
-            // Get the default value if provided from the command line. If not
-            // get it from JSON
-            match variable.var_type.as_str() {
-                "string" => {
-                    let statement = format!("@State var {}: String = \"{}\"\n", variable.name, variable.default);
-                    result.push_str(statement.as_str());
+            match variable {
+                Variable::InputString(input_string) => {
+                    result.push_str(input_string.declaration().as_str());
                 }
-                "bool" => {
-                    let statement = format!("@State var {}: Bool = {}\n", variable.name, variable.default);
-                    result.push_str(statement.as_str());
+                Variable::InputBoolean(input_boolean) => {
+                    result.push_str(input_boolean.declaration().as_str());
                 }
-                "picker" => {
-                    let default = Self::enum_letter_string(variable.default);
-                    let statement = format!("@State var {}: {} = .{}\n",
-                                            variable.name,
-                                            variable.name.to_uppercase(),
-                                            default);
-                    result.push_str(statement.as_str());
+                Variable::Picker(picker) => {
+                    result.push_str(picker.declaration().as_str());
                 }
-                _ => {
-                    println!("Unknown variable type in declaration: {}", variable.var_type);
-                    exit(-1);
-                },
+                Variable::RadioButton(radio_button) => {
+                    result.push_str(radio_button.declaration().as_str());
+                }
             }
         }
+        let height = format!("\
+        let row_height: CGFloat = {}
+        let window_width: CGFloat = {}
+        ", row_height, window_width);
+        result.push_str(height.as_str());
         result
     }
 
-    pub fn dialog_title(self) -> String {
+    /// Output the title declaration that can be injected
+    /// into the template at the '{title}' position
+    pub fn dialog_title(&self) -> String {
         format!("Title(text: \"{}\")", self.title)
     }
 
-    pub fn result(self) -> String {
+    pub fn result(&self) -> String {
         let mut result = String::new();
         result.push_str("print(\"");
         let mut statements: Vec<String> = Vec::new();
-        for variable in self.variables {
-            match variable.var_type.as_str() {
-                "string" => {
-                    let statement = format!("{}=\\({})",
-                                            variable.name, variable.name);
-                    statements.push(statement);
+        for variable in &self.variables {
+            match variable {
+                Variable::InputString(input_string) => {
+                    statements.push(input_string.result());
                 }
-                "bool" => {
-                    let statement = format!("{}=\\({})",
-                                            variable.name, variable.name);
-                    statements.push(statement);
+                Variable::InputBoolean(input_boolean) => {
+                    statements.push(input_boolean.result());
                 }
-                "picker" => {
-                    let statement = format!("{}=\\({})",
-                                            variable.name, variable.name);
-                    statements.push(statement);
+                Variable::Picker(picker) => {
+                    statements.push(picker.result());
                 }
-                _ => {
-                    println!("Unknown variable type in result: {}", variable.var_type);
-                    exit(-1);
-                },
+                Variable::RadioButton(radio_button) => {
+                    statements.push(radio_button.result());
+                }
             }
         }
         let joined = statements.join("\\t");
@@ -85,90 +78,34 @@ impl Config {
         result
     }
 
-    pub fn enum_letter_i32(offset: i32) -> char {
-        ('A' as u8 + offset as u8) as char
-    }
 
-    pub fn enum_letter_string(offset: String) -> char {
-        let offset = offset.parse::<i32>().unwrap();
-        ('A' as u8 + offset as u8) as char
-    }
-
-    pub fn types(self) -> String {
+    pub fn rows(&self) -> String {
         let mut result = String::new();
-        for variable in self.variables {
-            if variable.choices.is_some() {
-                let choices = variable.choices.unwrap();
-                let declaration = format!("enum {}: String, CaseIterable {}\n", variable.name.to_uppercase(), "{");
-                result.push_str(declaration.as_str());
-                result.push_str("var id: Self { self }\n");
-                let mut counter = 0;
-                for choice in choices {
-                    let declaration = format!("case {} = \"{}\"\n",Self::enum_letter_i32(counter), choice);
-                    counter += 1;
-                    result.push_str(declaration.as_str());
+        let mut first = true;
+        for variable in &self.variables {
+            match variable {
+                Variable::InputString(input_string) => {
+                    result.push_str(input_string.instantiate().as_str());
                 }
-                result.push_str("}\n");
+                Variable::InputBoolean(input_boolean) => {
+                    result.push_str(input_boolean.instantiate().as_str());
+                }
+                Variable::Picker(picker) => {
+                    result.push_str(picker.instantiate().as_str());
+                }
+                Variable::RadioButton(radio_button) => {
+                    result.push_str(radio_button.instantiate().as_str());
+                }
             }
-        }
-        result
-
-    }
-
-    pub fn selectors(self, template_directory: String) -> String {
-        let mut result = String::new();
-        for variable in self.variables {
-            if variable.choices.is_some() {
-                let path = format!("{}/selector.txt", template_directory);
-                let template: String = fs::read_to_string(path).unwrap();
-                let enumeration = variable.name.to_uppercase();
-                let output: String = template.replacen("{enumeration}",
-                                                       enumeration.to_uppercase().as_str(), 2);
-                let choices = &variable.choices.unwrap();
-                let mut counter = 0;
-                let mut cases = String::new();
-                for _ in choices {
-                    let letter = ('A' as u8 + counter as u8) as char;
-                    counter += 1;
-                    let declaration = format!("Text(CHOICE.{}.rawValue).tag({}.{})\n",letter, variable.name.to_uppercase(),letter);
-                    cases.push_str(declaration.as_str());
+            result.push_str("\t.frame(height: row_height)\n");
+            if first {
+                result.push_str("\
+                \t.focused($focusedField, equals: .field)
+                .task {
+                   self.focusedField = .field
                 }
-                let output: String = output.replacen("{picker}",
-                                                     cases.as_str(),
-                                                     1);
-                result.push_str(output.as_str());
-            }
-        }
-        result
-    }
-
-    pub fn rows(self) -> String {
-        let mut result = String::new();
-        for variable in self.variables {
-            match variable.var_type.as_str() {
-                "string" => {
-                    let statement = format!("Row(text: \"{}\", input: ${})\n",
-                                            variable.description, variable.name);
-                    result.push_str(statement.as_str());
-                }
-                "bool" => {
-                    let statement = format!("Toggle(\"{}\", isOn: ${})\n
-                      .toggleStyle(SwitchToggleStyle())\n
-                      .frame(width: 325, alignment: .leading)\n",
-                                            variable.description, variable.name);
-                    result.push_str(statement.as_str());
-                }
-                "picker" => {
-                    let statement = format!("Selector{}(info: \"{}\", option: ${})\n",
-                                            variable.name.to_uppercase(),
-                                            variable.description,
-                                            variable.name);
-                    result.push_str(statement.as_str());
-                }
-                _ => {
-                    println!("Unknown variable type in rows: {}", variable.var_type);
-                    exit(-1);
-                },
+                ");
+                first = false;
             }
         }
         result
