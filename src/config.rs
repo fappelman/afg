@@ -2,17 +2,25 @@ use serde::{Deserialize, Serialize};
 use std::str;
 use crate::traits::{Declaration, Instantiate, Result};
 
+/// Possible variable types
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum Variable {
+    /// A type to input a `String`
     InputString(crate::input_string::InputString),
+    /// A type to input a `Boolean`
     InputBoolean(crate::input_boolean::InputBoolean),
+    /// A type to input a value using a `Picker`
     Picker(crate::picker::Picker),
+    /// A type to input one or more values using a radio button
     RadioButton(crate::radio_button::RadioButton),
 }
 
+/// The configuration as specified on the command line
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Config {
+    /// The title of the dialog
     pub title: String,
+    /// The variables that make up the dialog
     pub variables: Vec<Variable>,
 }
 
@@ -20,9 +28,9 @@ impl Config {
     /// Output the variable declarations at the top of the main view
     /// Return a string that can be injected into the template
     /// at the position '{declaration}'
-    pub fn variable_declaration(self, window_width: u32, row_height: u32) -> String {
+    pub fn variable_declaration(&self, window_width: u32, row_height: u32) -> String {
         let mut result = String::new();
-        for variable in self.variables {
+        for variable in &self.variables {
             match variable {
                 Variable::InputString(input_string) => {
                     result.push_str(input_string.declaration().as_str());
@@ -52,6 +60,10 @@ impl Config {
         format!("Title(text: \"{}\")", self.title)
     }
 
+    /// Get the result `String` that is used to output 
+    /// the result of the dialog.
+    /// The output is in the form of a `Swift` 
+    /// print statement.
     pub fn result(&self) -> String {
         let mut result = String::new();
         result.push_str("print(\"");
@@ -74,12 +86,13 @@ impl Config {
         }
         let joined = statements.join("\\t");
         result.push_str(joined.as_str());
-        result.push_str("\")");
+        result.push_str("\", terminator: \"\")");
         result
     }
 
-
-    pub fn rows(&self) -> String {
+    /// Return the instantiation of all the field 
+    /// that have been defined in the configuration
+    pub fn instantiate(&self) -> String {
         let mut result = String::new();
         let mut first = true;
         for variable in &self.variables {

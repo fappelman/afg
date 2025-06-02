@@ -14,42 +14,43 @@ key value pairs.
 ```bash
 Alfred Form Generator
 
-Usage: afg [OPTIONS] --title <title> --field <field> <output>
+Usage: afg [OPTIONS] --field <field> <title>
 
 Arguments:
-  <output>  The name of the swift output file
+  <title>  Specify the dialog title
 
 Options:
-  -v                                    turns on verbose mode
-      --separator <field_separator>     Specify the field separator [default: @]
-      --templates <template_directory>  Specify the directory of templates [default: Template]
-  -t, --title <title>                   Specify the field separator
-  -f, --field <field>                   Describes details of a field
-  -h, --help                            Print help
-  -V, --version                         Print version
+      --separator <field_separator>  Specify the field separator [default: @]
+      --field-height <INT>           Specify the field height [default: 35]
+      --window-width <INT>           Specify the width of the window [default: 400]
+  -f, --field <field>                Describes details of a field. Can be repeated multiple times.
+  -h, --help                         Print help
+  -V, --version                      Print version
 
 This application is used to generate a swift application that can be run in Alfred as a form input
 ```
 
 ## Specification
 
-The specification should at least specify the `title`, one form `field` and
-the output file.
+The specification should at least specify the `title` and at least one form `field`.
 
 The `title` is a free format title that should specify the goal of the form.
+
+The `field's` specify the user interface components, from top to bottom in the order
+as specified on the command line.
 
 ### Field
 
 The form `field` option has 4 or 5 fields depending on the type
 of field.
 
-|Element| Description                                                                          |
-|-|--------------------------------------------------------------------------------------|
-|type| The type of form field. Possible values are "string", "bool" and "picker".           |
-|name| The name of the form field. The name is used to return the value.                    |
-|default| The default value. This value can be empty, but should be specified without a value. |
-|decoration| The annotation (description) of the field in the form.                               |
-|choices| The possible values of the picker. This is only valid for type=picker.               |
+|Element| Description                                                                                                                                                                      |
+|-|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|type| The type of form field. Possible values are "string", "bool" "radio" and "picker". This part is case insensitive.                                                                |
+|name| The name of the form field. The name is used to return the value.                                                                                                                |
+|default| The default value. This value can be empty, but should still be specified without a value. In the case of a radio button this field can contain multiple comma separated values. |
+|decoration| The annotation (description) of the field in the form.                                                                                                                           |
+|choices| The possible values of the picker or radio button.                                                                                                                               |
 
 An example of the field specification is as follows:
 
@@ -66,40 +67,48 @@ A full example could be as follows:
 
 ```bash
 afg \
-	--title "The example title" \
 	--field type=String@name=title@default=example@decoration="The Title" \
 	--field type=String@name=subtitle@default=@decoration="The Subtitle" \
 	--field type=Bool@name=enabled@default=true@decoration="Enable secret" \
 	--field type=Picker@name=choice@default=0@decoration="Make your choice"@choices="Choice A,Choice B,Choice C" \
-	--field type=Picker@name=choice2@default=2@decoration="Make another choice"@choices="Choice A,Choice B,Choice C" \
-	output.swift
+	--field type=Radio@name=radio@default=1,John@decoration="The recipients"@choices="John,Chris,Joe" \
+	--field type=Picker@name=choice2@default=2@decoration="Make another choice"@choices="Choice X,Choice Y,Choice Z" \
+	--window-width 500 \
+	"The example title"	
 ```
 
-The then generated output file can then be run using the command:
+The window looks as follows:
 
-```bash
-swift output.swift
-```
+![window](images/example.png)
 
 An example output of the above command is:
 
 ```bash
-title=This is the entered title subtitle=This is the subtitle enabled=true choice=B choice2=C
+title=example	subtitle=my subtitle	enabled=true	choice=Choice A	radio=Chris,John	choice2=Choice Z```
 ```
 
-Note that the output is tab separated.
+Note that the output line has no newline and each field is tab separated.
 
 when the dialog is cancelled, the output is the word "canceled".
 
-## Templates
+## Using in Alfred
 
-The application uses two templates. 
+A typical flow is the following:
+
+![flow](images/flow.png)
+
+where the script contains the `afg` command. The "Canceled/Proceed" box is
+defined as follows:
+
+![cancel-proceed](images/cancel-proceed.png)
+
+and the final box will simply split the output of `afg` into variables.
 ## Credits
 
 The original idea to use `Swift` code to generate a UI is coming
 from Patrick Sy [GUI Input Experiment](https://github.com/zeitlings/alfred-workflows/releases/tag/v1.0.0-uiex)
 
-The templates are based on the original work of Patrick.
+The templates that is being used is based on the original work of Patrick.
 
-The main difference is that the code from Patrick was static 
-and did not have default keys.
+The main difference is that the code from Patrick was static,
+did not have default keys and did not support radio buttons.

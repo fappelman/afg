@@ -2,8 +2,10 @@ use std::collections::HashMap;
 use std::process::exit;
 use crate::config::{Config, Variable};
 use crate::input_type::InputType;
-use crate::string_literals::StringLiterals;
+use crate::string_array_argument::StringArrayArgument;
 
+/// Analyze the fields as specified on the command line and convert to the
+/// a configuration.
 pub fn analyze_fields(fields: &Vec<&String>, separator: &String, title: &String) -> Config {
     let mut variables: Vec<Variable> = Vec::new();
     let known_keywords = vec!["type", "name", "default", "decoration", "choices"];
@@ -52,7 +54,7 @@ pub fn analyze_fields(fields: &Vec<&String>, separator: &String, title: &String)
                     .split(",")
                     .map(|val| val.to_string())
                     .collect();
-                let choices = StringLiterals::new(values);
+                let choices = StringArrayArgument::new(values);
                 // Map the default value if required
                 let default = crate::picker::Picker::map_default(default, &choices);
                 // Make certain that all default values are present in the choices
@@ -69,12 +71,12 @@ pub fn analyze_fields(fields: &Vec<&String>, separator: &String, title: &String)
                     .split(",")
                     .map(|val| val.to_string())
                     .collect();
-                let choices = StringLiterals::new(values);
+                let choices = StringArrayArgument::new(values);
                 let default = default
                     .split(",")
                     .map(|val| val.to_string())
                     .collect();
-                let default = StringLiterals::new(default);
+                let default = StringArrayArgument::new(default);
                 // Map the default value if required
                 let default = crate::radio_button::RadioButton::map_default(&default, &choices);
                 // Make certain that all default values are present in the choices

@@ -23,7 +23,7 @@ struct Dialog: View {
   var body: some View {
       VStack {
         {title}
-        {rows}
+        {instantiate}
         Buttons()
       }
       .padding()
@@ -91,7 +91,7 @@ struct ToggleView: View {
                     .toggleStyle(SwitchToggleStyle())
                 Spacer()
             }
-            .frame(width: 310)
+            .frame(width: {field_width})
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
     }
@@ -134,7 +134,7 @@ struct RadioSelection: View {
                     .cornerRadius(8)
                 }
             }
-            .frame(maxWidth: 310)
+            .frame(maxWidth: {field_width})
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
     }
@@ -150,7 +150,7 @@ struct StringView: View {
                 .font(.headline)
                 .padding(.trailing, 10)
             TextField(text, text: $input)
-                .frame(maxWidth: 300)
+                .frame(maxWidth: {field_width})
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
     }
@@ -171,7 +171,7 @@ struct PickerView: View {
                     Text(option).tag(option)
                 }
             }
-            .frame(width: 310)
+            .frame(width: {field_width})
             .pickerStyle(MenuPickerStyle())
         }
         .frame(maxWidth: .infinity, alignment: .trailing)
