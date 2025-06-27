@@ -101,7 +101,7 @@ Swift is used to generate the form that presents your questions.
 compile the binary yourself:
    
    ### Install a pre-compiled binary
-   The latest binary can be found here: [https://github.com/fappelman/afg/releases/download/v0.9.1/afg.dmg](https://github.com/fappelman/afg/releases/download/v0.9.1/afg.dmg)
+   The latest binary can be found here: [https://github.com/fappelman/afg/releases/download/v0.9.2/afg.dmg](https://github.com/fappelman/afg/releases/download/v0.9.2/afg.dmg)
    
    ### Compile it yourself
    1. This application is built in `Rust`. The instructions to install 

@@ -11,10 +11,10 @@ esac
 
 BUILD_DIR=${TMPDIR}/afg-$$
 cargo install --path .
-codesign -s ${CERT_ID} ~/.cargo/bin/afg
 mkdir ${BUILD_DIR}
 cp ~/.cargo/bin/afg ${BUILD_DIR}
 strip ${BUILD_DIR}/afg
+codesign -s ${CERT_ID} ${BUILD_DIR}/afg
 ln -s /usr/local/bin ${BUILD_DIR}/bin
 rm -f afg.dmg
 hdiutil create -format UDZO -imagekey zlib-level=9 -srcfolder "${BUILD_DIR}" -o afg.dmg >/dev/null
