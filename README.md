@@ -91,6 +91,38 @@ Note that the output line has no newline and each field is tab separated.
 
 when the dialog is cancelled, the output is the word "canceled".
 
+## Install
+
+To install `afg` take the following steps:
+
+1. You must install `Swift` on your system. See [https://www.swift.org/install/macos/](https://www.swift.org/install/macos/).
+Swift is used to generate the form that presents your questions.
+2. You now have the option to either install a pre-compiled binary or
+compile the binary yourself:
+   
+   ### Install a pre-compiled binary
+   The latest binary can be found here: [https://github.com/fappelman/afg/releases/download/v0.9/afg.dmg](https://github.com/fappelman/afg/releases/download/v0.9/afg.dmg)
+   
+   ### Compile it yourself
+   1. This application is built in `Rust`. The instructions to install 
+   `Rust` can be found here:
+   [https://www.rust-lang.org/tools/install](https://www.rust-lang.org/tools/install)
+   and it boils down to running the following command in the terminal:
+       ```sh
+      curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+      ```
+    
+   2. Download and install this project using the following steps in the terminal:
+       ```sh
+       cd
+       mkdir temp
+       git clone https://github.com/fappelman/afg.git
+       cd afg
+       PATH=$PATH:~/.cargo/bin
+       cargo install --path .
+       ```
+      after these steps, the afg application will be installed 
+      in `~/.cargo/bin`.
 ## Using in Alfred
 
 A typical flow is the following:

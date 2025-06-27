@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+BUILD_DIR=${TMPDIR}/afg-$$
+cargo install --path .
+mkdir ${BUILD_DIR}
+cp ~/.cargo/bin/afg ${BUILD_DIR}
+strip ${BUILD_DIR}/afg
+ln -s /usr/local/bin ${BUILD_DIR}/bin
+rm -f afg.dmg
+hdiutil create -format UDZO -imagekey zlib-level=9 -srcfolder "${BUILD_DIR}" -o afg.dmg >/dev/null
+rm -rf ${BUILD_DIR}
+ls -lh afg.dmg
