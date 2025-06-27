@@ -1,7 +1,17 @@
 #!/usr/bin/env bash
 
+case ${CERT_ID} in
+"")
+  echo "The CERT_ID environment variable is not set"
+  exit -1
+  ;;
+*)
+  ;;
+esac
+
 BUILD_DIR=${TMPDIR}/afg-$$
 cargo install --path .
+codesign -s ${CERT_ID} ~/.cargo/bin/afg
 mkdir ${BUILD_DIR}
 cp ~/.cargo/bin/afg ${BUILD_DIR}
 strip ${BUILD_DIR}/afg
