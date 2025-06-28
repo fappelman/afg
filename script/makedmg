@@ -14,9 +14,12 @@ cargo install --path .
 mkdir ${BUILD_DIR}
 cp ~/.cargo/bin/afg ${BUILD_DIR}
 strip ${BUILD_DIR}/afg
-codesign -s ${CERT_ID} ${BUILD_DIR}/afg
+./script/notarize.sh ${BUILD_DIR}/afg ${BUILD_DIR}/afg.zip
 ln -s /usr/local/bin ${BUILD_DIR}/bin
 rm -f afg.dmg
+(cd ${BUILD_DIR} ; rm -f afg ;  unzip ${BUILD_DIR}/afg.zip ; rm -f afg.zip)
 hdiutil create -format UDZO -imagekey zlib-level=9 -srcfolder "${BUILD_DIR}" -o afg.dmg >/dev/null
+ls -lh ${BUILD_DIR}
+/usr/sbin/spctl -vv --assess --type install ${BUILD_DIR}/afg
 rm -rf ${BUILD_DIR}
 ls -lh afg.dmg
